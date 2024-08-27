@@ -1,0 +1,10 @@
+_site
+.sass-cache
+Gemfile.lock
+*.gem
+.jekyll-cache
+.DS_Store
+
+public/
+resources/
+.hugo_build.lock
