@@ -1,8 +1,8 @@
-+++
-title = 'HackTheBox (HTB) Oldbridge pwn challenge writeup '
-date = 2024-07-27
-draft = true
-+++
+---
+title: 'HackTheBox (HTB) Oldbridge pwn challenge writeup '
+# date = 2024-07-27
+draft: 'true'
+---
 
 Oldbridge is a retired PWN challenge from Hack The Box. Here's how I solved it:
 

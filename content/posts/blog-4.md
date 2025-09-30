@@ -1,9 +1,9 @@
-+++
-title = 'ChipWhisperer Nano - Fault injection on an external target'
-date = 2024-07-27
-draft = true
-description = "Somewhat of a guide composed from my experience using the ChipWhisperer Nano on an external target- an Arduino Uno."
-+++
+---
+title: 'ChipWhisperer Nano - Fault injection on an external target'
+# date  2024-07-27
+# draft = true
+description: "Somewhat of a guide composed from my experience using the ChipWhisperer Nano on an external target- an Arduino Uno."
+---
 
 ![Untitled](/images/cw-1/Untitled.png)
 

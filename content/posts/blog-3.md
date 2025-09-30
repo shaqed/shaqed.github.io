@@ -1,9 +1,9 @@
-+++
-title = 'CVE-2020-29557 Writeup'
-date = 2024-07-27
-draft = true
-description = 'A simple stack-based buffer overflow in common web portal of DLink routers'
-+++
+---
+title: 'CVE-2020-29557 Writeup'
+# date = 2024-07-27
+# draft = true
+description: 'A simple stack-based buffer overflow in common web portal of DLink routers'
+---
 
 To get started, we want to get access to the device's firmware. To do so, a simple google search will lead to DLink-Russia's website which opens a small database of firmwares of their devices ready for user to use to update the firmware of their own devices.
 

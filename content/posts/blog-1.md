@@ -1,8 +1,8 @@
-+++
-title = 'HackTheBox (HTB) Ropme pwn challenge writeup'
-date = 2020-04-12
-draft = true
-+++
+---
+title: 'HackTheBox (HTB) Ropme pwn challenge writeup'
+# date: '14/04/2022'
+date: "2022-04-14T00:40:04-07:00"
+---
 
 
 ### Binary Analysis
