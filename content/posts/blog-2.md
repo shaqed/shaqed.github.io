@@ -1,7 +1,8 @@
 ---
 title: 'HackTheBox (HTB) Oldbridge pwn challenge writeup '
 # date = 2024-07-27
-draft: 'true'
+# draft: 'true'
+date: "2022-04-14T00:40:04-07:00"
 ---
 
 Oldbridge is a retired PWN challenge from Hack The Box. Here's how I solved it:
@@ -112,7 +113,7 @@ ulong check_username(int param_fd)
 The interesting part here is:
 
 1. The `read` calls fill in a buffer with `0x420 = 1056` bytes **but** the buffer it stores it into is only 1032! Buffer overflow detected! are we done?
-2. Every single bit of the input from the user is XORed with `0xdz`, then the start of the string is checked against the "hidden" username: `il{dih`. <br>
+2. Every single bit of the input from the user is XORed with `0xdz`, then the start of the string is checked against the "hidden" username: `il{dih`. m
 To reveal the real username we can XOR that text with `0xd` again. We can use a simple Python one-liner we can figure out what is the username:
 ```python
 >>> "".join([chr(ord(t) ^ 0xd) for t in "il{dih"])
@@ -144,7 +145,7 @@ Username: davideasdasdasdasdasdasdasd
 Username found!
 ```
 
-We know that our buffer is 1032 bytes long, what happens when we overflow it?<br>
+We know that our buffer is 1032 bytes long, what happens when we overflow it?m
 `$ python -c 'print "A"*1032' | nc localhost 1337` (1032 "A"s plus a newline character = 1033 bytes)
 
 We get nothing back, and if we look at the server:
@@ -229,7 +230,7 @@ if __name__ == "__main__":
     main()
 ```
 
-We have a small function that sends a payload and reports if the payload is good (by checking if the server returned the "Username found!" message). If the server fails - no message will be sent back and we would know that we have broken the stack canary.<br>
+We have a small function that sends a payload and reports if the payload is good (by checking if the server returned the "Username found!" message). If the server fails - no message will be sent back and we would know that we have broken the stack canary.m
 We use `leak_next_byte` to leak the next 8 bytes from the stack:
 
 ```python
@@ -261,10 +262,10 @@ After the canary there's the old frame pointer. Which usually we find it insigni
 
 But in here, we do not have enough stack space for a long ROP chain like in ROPme, we can override the buffer (1032 bytes), the canary (1040), the old rbp (1048) and the return address (1056) and *that's it*.
 
-Before we think about how to jump around in the program, let's use the previous technique to leak the old RBP on the stack as well as the return address.<br>
+Before we think about how to jump around in the program, let's use the previous technique to leak the old RBP on the stack as well as the return address.m
 We can do that because if we want to receive "Username found!" from the server, the `main()` function would need the right stack pointer set to load values from the stack to those `write` calls. if we mess it up even a little bit, we can notice it in our client side by not receiving the message.
 
-**Leaking the return address is a little bit more difficult**. Because we start by overriding the least significant byte, the program might return to some other location in the `main`, it could be another `fork` or `accept` and make things be a little less predictible for us. <br>
+**Leaking the return address is a little bit more difficult**. Because we start by overriding the least significant byte, the program might return to some other location in the `main`, it could be another `fork` or `accept` and make things be a little less predictible for us. m
 But - since the randomization is only effective for the least 12 bits of the return address, the first byte will definitely not change:
 
 The return address from `check_username` is:
@@ -363,7 +364,7 @@ gdb-peda$ x/16gx $rbp-0x20
 
 The distance from old rbp `0x00007fffffffe590` to our buffer `0x7fffffffe110` is `0x480`.
 
-Moving on to the .text section, we leaked a specific address of an instruction inside the `main` function (the one that ends with `0xcf`).<br>
+Moving on to the .text section, we leaked a specific address of an instruction inside the `main` function (the one that ends with `0xcf`).m
 We can again go back to our server to see the offset of that value from the start of the section
 
 ```
@@ -405,11 +406,11 @@ Well, since the end of the `check_username` function is a `ret` instruction, wha
 To do so we need to change the `rsp`, and we have only 1 jump that we can control in order to get it.
 
 ### The LEAVE instruction
-The [leave](https://c9x.me/x86/html/file_module_x86_id_154.html) instruction which is present at the end of the function restores the old stack pointer of the previous frame. The instruction is "leaving" the current frame.<br>
-To do so first: it perform `rsp = rbp`. Restoring the `rsp` to the value from the previous frame.<br>
+The [leave](https://c9x.me/x86/html/file_module_x86_id_154.html) instruction which is present at the end of the function restores the old stack pointer of the previous frame. The instruction is "leaving" the current frame.m
+To do so first: it perform `rsp = rbp`. Restoring the `rsp` to the value from the previous frame.m
 I like to think of `leave` as the "`ret`" instruction of the stack.
 
-Great, so if we `ret` to the `leave` instruction again (1 instruction above the original `ret`), we are basically "popping" the rbp again effectively changing the `rsp` to the value of our choosing!<br>
+Great, so if we `ret` to the `leave` instruction again (1 instruction above the original `ret`), we are basically "popping" the rbp again effectively changing the `rsp` to the value of our choosing!m
 All that is required of us is to change the return address to the `leave` instruction. After which the program will execute the `leave` and then the `ret`. The `ret` now will return to a value at the stop of the stack, which **is the custom stack now**
 
 If we send the following payload:
@@ -612,7 +613,7 @@ Awesome! we can take this offset to some LIBC database and check the libc versio
 
 I've looked in some libc databases, namely https://github.com/niklasb/libc-database. And couldn't find the offset I found for `write` on the remote server in *any* of the databases that I've looked.
 
-I thought I'd try a different approach: so I cannot learn the libc version - but who cares? I have control over `write` and I can plug in what ever address I like there get back a byte from the process's memory. <br>
+I thought I'd try a different approach: so I cannot learn the libc version - but who cares? I have control over `write` and I can plug in what ever address I like there get back a byte from the process's memory. m
 I can use that to **leak all of the libc pages of the remote server's process** and look for the gadgets I want there. I thought that this might not have been the solution that most of the people who have solved this challenge used. But hey, if it works!
 
 ### Dumping the entire libc content and looking for useful gadgets
@@ -630,7 +631,7 @@ If we make the remote server execute `execve("/bin/sh", NULL, NULL)` we're still
 
 The shell is executed, however its inputs and outputs are the file descriptors inherited from the process that called `execve`, and if we recall - that process has its original standard input and output (file descriptors 0 and 1). And we communicate with the server via file descriptor 4.
 
-To get around this issue, we'd like to replace the STDIN and STDOUT of the process with the file descriptor of the socket (0x4). <br>
+To get around this issue, we'd like to replace the STDIN and STDOUT of the process with the file descriptor of the socket (0x4). m
 To do that, we'll use the [dup2](https://linux.die.net/man/2/dup2) system call. dup2() duplicates a file descriptor (the first argument) to a second desired one. So our plan would be to:
 1. `close(0)` close the STDIN
 2. `close(1)` close the STDOUT
